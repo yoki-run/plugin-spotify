@@ -31,7 +31,7 @@
       "description": "Show what's playing right now",
       "mode": "detail",
       "exec": "now_playing.py",
-      "refresh": 5000
+      "refresh": 1000
     },
     {
       "name": "play",
