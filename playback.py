@@ -17,6 +17,49 @@ from lib import (
 )
 
 
+def ensure_device_id(ctx):
+    """
+    Resolve an active Spotify device id, falling back to the first
+    available one if no device is currently active.
+
+    Spotify's /me/player/play endpoint returns 404 NO_ACTIVE_DEVICE
+    when nothing is playing — even if the user has Spotify open. This
+    helper sidesteps that by picking a device explicitly.
+    """
+    try:
+        cur = api(ctx, "GET", "/me/player")
+        if cur and (cur.get("device") or {}).get("id"):
+            return cur["device"]["id"]
+    except RuntimeError:
+        pass
+    try:
+        data = api(ctx, "GET", "/me/player/devices") or {}
+    except RuntimeError:
+        return None
+    items = data.get("devices") or []
+    if not items:
+        return None
+    for d in items:
+        if d.get("is_active"):
+            return d.get("id")
+    for d in items:
+        if not d.get("is_restricted"):
+            return d.get("id")
+    return items[0].get("id")
+
+
+def _no_device_error():
+    return error(
+        "No active Spotify device",
+        details="Open Spotify on a phone, computer, or speaker first. `sp d` shows what Yoki sees.",
+    )
+
+
+def _is_no_device_error(e):
+    s = str(e).lower()
+    return "no active" in s or "no_active_device" in s or "404" in s
+
+
 def detect_command(input_command, query):
     if input_command in {"play", "pause", "next", "prev", "vol", "shuffle", "like", "unlike"}:
         return input_command
@@ -38,11 +81,18 @@ def detect_command(input_command, query):
 
 def cmd_play(ctx, query):
     arg = strip_keyword(query, "play")
+
+    device_id = ensure_device_id(ctx)
+    if device_id is None:
+        return _no_device_error()
+
     if not arg:
         try:
-            api(ctx, "PUT", "/me/player/play")
+            api(ctx, "PUT", "/me/player/play", params={"device_id": device_id})
             return background("Resumed")
         except RuntimeError as e:
+            if _is_no_device_error(e):
+                return _no_device_error()
             return error("Play failed", details=str(e))
 
     try:
@@ -55,8 +105,10 @@ def cmd_play(ctx, query):
     track = items[0]
     uri = track["uri"]
     try:
-        api(ctx, "PUT", "/me/player/play", body={"uris": [uri]})
+        api(ctx, "PUT", "/me/player/play", body={"uris": [uri]}, params={"device_id": device_id})
     except RuntimeError as e:
+        if _is_no_device_error(e):
+            return _no_device_error()
         return error("Play failed", details=str(e))
     return background(
         f"{track['name']} - {fmt_artists(track.get('artists'))}",
@@ -68,25 +120,40 @@ def cmd_play(ctx, query):
 
 
 def cmd_pause(ctx):
+    device_id = ensure_device_id(ctx)
+    if device_id is None:
+        return _no_device_error()
     try:
-        api(ctx, "PUT", "/me/player/pause")
+        api(ctx, "PUT", "/me/player/pause", params={"device_id": device_id})
     except RuntimeError as e:
+        if _is_no_device_error(e):
+            return _no_device_error()
         return error("Pause failed", details=str(e))
     return background("Paused")
 
 
 def cmd_next(ctx):
+    device_id = ensure_device_id(ctx)
+    if device_id is None:
+        return _no_device_error()
     try:
-        api(ctx, "POST", "/me/player/next")
+        api(ctx, "POST", "/me/player/next", params={"device_id": device_id})
     except RuntimeError as e:
+        if _is_no_device_error(e):
+            return _no_device_error()
         return error("Next failed", details=str(e))
     return background("Next track")
 
 
 def cmd_prev(ctx):
+    device_id = ensure_device_id(ctx)
+    if device_id is None:
+        return _no_device_error()
     try:
-        api(ctx, "POST", "/me/player/previous")
+        api(ctx, "POST", "/me/player/previous", params={"device_id": device_id})
     except RuntimeError as e:
+        if _is_no_device_error(e):
+            return _no_device_error()
         return error("Prev failed", details=str(e))
     return background("Previous track")
 
@@ -98,9 +165,14 @@ def cmd_vol(ctx, query):
     except (TypeError, ValueError):
         return error("Volume must be 0-100", details=f"Got: {arg!r}")
     level = max(0, min(100, level))
+    device_id = ensure_device_id(ctx)
+    if device_id is None:
+        return _no_device_error()
     try:
-        api(ctx, "PUT", "/me/player/volume", params={"volume_percent": level})
+        api(ctx, "PUT", "/me/player/volume", params={"volume_percent": level, "device_id": device_id})
     except RuntimeError as e:
+        if _is_no_device_error(e):
+            return _no_device_error()
         return error("Volume failed", details=str(e))
     bars = "#" * (level // 5) + "-" * (20 - level // 5)
     return background(f"vol {bars} {level}%")
