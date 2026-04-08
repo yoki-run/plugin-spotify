@@ -1,0 +1,127 @@
+{
+  "name": "Spotify",
+  "keyword": "sp",
+  "icon": "music",
+  "description": "Control Spotify from Yoki — play, search, switch devices",
+  "version": "1.0.0",
+  "author": "Yoki",
+  "homepage": "https://yoki.run",
+  "license": "MIT",
+  "categories": ["media"],
+  "yoki_min": "1.0.4.0",
+
+  "protocol": "v2",
+
+  "permissions": {
+    "network": ["api.spotify.com", "accounts.spotify.com"],
+    "filesystem": ["read:./data", "write:./data"],
+    "notifications": true
+  },
+
+  "credentials": {
+    "slug": "spotify",
+    "service": "spotify",
+    "keys": ["client_id"]
+  },
+
+  "commands": [
+    {
+      "name": "now",
+      "title": "Now Playing",
+      "description": "Show what's playing right now",
+      "mode": "detail",
+      "exec": "now_playing.py",
+      "refresh": 5000
+    },
+    {
+      "name": "play",
+      "title": "Play / Resume",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["play"],
+      "takes_query": true
+    },
+    {
+      "name": "pause",
+      "title": "Pause",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["pause", "stop"]
+    },
+    {
+      "name": "next",
+      "title": "Next track",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["next", "skip", "n"]
+    },
+    {
+      "name": "prev",
+      "title": "Previous track",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["prev", "previous", "back", "p"]
+    },
+    {
+      "name": "vol",
+      "title": "Set volume",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["vol", "volume", "v"],
+      "takes_query": true
+    },
+    {
+      "name": "shuffle",
+      "title": "Toggle shuffle",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["shuffle", "sh"]
+    },
+    {
+      "name": "like",
+      "title": "Toggle like for current track",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["like", "love", "fav"]
+    },
+    {
+      "name": "unlike",
+      "title": "Remove from liked",
+      "mode": "background",
+      "exec": "playback.py",
+      "keywords": ["unlike", "unfav"]
+    },
+    {
+      "name": "search",
+      "title": "Search tracks",
+      "mode": "list",
+      "exec": "search.py",
+      "keywords": ["search", "find", "s"],
+      "takes_query": true,
+      "timeout": 8000
+    },
+    {
+      "name": "devices",
+      "title": "Devices",
+      "mode": "list",
+      "exec": "devices.py",
+      "keywords": ["devices", "device", "d"]
+    },
+    {
+      "name": "playlists",
+      "title": "Playlists",
+      "mode": "list",
+      "exec": "playlists.py",
+      "keywords": ["playlists", "pl", "lists"]
+    },
+    {
+      "name": "setup",
+      "title": "Authenticate with Spotify",
+      "mode": "background",
+      "exec": "setup.py",
+      "keywords": ["setup", "auth", "login"],
+      "takes_query": true,
+      "timeout": 120000
+    }
+  ]
+}
