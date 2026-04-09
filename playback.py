@@ -82,7 +82,7 @@ def detect_command(input_command, query):
 def _is_spotify_uri(s):
     """Check if a string is a Spotify URI (spotify:track:xxx) or URL
     (https://open.spotify.com/...). These should be played directly via
-    the context_uris / uris endpoint, not searched."""
+    the context_uri / uris endpoint, not searched."""
     return s.startswith("spotify:") or s.startswith("https://open.spotify.com/")
 
 
@@ -104,11 +104,11 @@ def cmd_play(ctx, query):
 
     # Direct Spotify URI/URL — play without searching. Supports all
     # resource types: track, album, playlist, artist, show, episode.
-    # Track URIs go into "uris" (single-track queue), everything else
-    # goes into "context_uris" (play the whole collection).
+    # Track URIs go into "uris" (array), everything else uses
+    # "context_uri" (singular string) to play the whole collection.
     if _is_spotify_uri(arg):
         is_track = ":track:" in arg or "/track/" in arg
-        body = {"uris": [arg]} if is_track else {"context_uris": [arg]}
+        body = {"uris": [arg]} if is_track else {"context_uri": arg}
         try:
             api(ctx, "PUT", "/me/player/play", body=body, params={"device_id": device_id})
         except RuntimeError as e:
