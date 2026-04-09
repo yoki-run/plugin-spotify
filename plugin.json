@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/xssmusashi/yoki/main/plugin.schema.json",
   "name": "Spotify",
   "keyword": "sp",
   "icon": "music",

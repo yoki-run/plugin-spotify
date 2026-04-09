@@ -1,17 +1,14 @@
 """
 Shared helpers for the Yoki Spotify plugin.
 
-Plugin SDK v2 protocol:
-- Read JSON object from stdin
-- Write JSON V2Response to stdout
-- Anything on stderr ends up in the host's plugin error UI
+SDK I/O and response builders are imported from yoki_plugin_sdk.
+This file contains Spotify-specific code: OAuth, API client, convenience functions.
 
 OAuth: Authorization Code with PKCE (no client secret needed for desktop apps).
 Tokens are persisted in <plugin_dir>/data/tokens.json.
 Client ID is persisted in <plugin_dir>/data/config.json.
 """
 
-import sys
 import os
 import json
 import time
@@ -19,77 +16,24 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-# Force UTF-8 on stdout/stderr. Python on Windows defaults to the console
-# code page (cp1252), which mangles non-ASCII characters like ·, ▮, emoji
-# when Yoki reads stdout back as UTF-8 JSON. Reconfigure is Python 3.7+.
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
-
-# ---------- I/O ----------
-
-def read_input():
-    """Read the V2Input JSON object from stdin. Returns dict."""
-    try:
-        raw = sys.stdin.read()
-        if not raw.strip():
-            return {}
-        return json.loads(raw)
-    except Exception:
-        return {}
-
-
-def write_response(resp):
-    """Write a V2Response dict as JSON to stdout."""
-    json.dump(resp, sys.stdout, ensure_ascii=False)
-    sys.stdout.write("\n")
-    sys.stdout.flush()
-
-
-def background(hud, notif=None):
-    out = {"type": "background", "hud": hud}
-    if notif:
-        out["notification"] = notif
-    return out
+from yoki_plugin_sdk import (
+    read_input,
+    write_response,
+    strip_keyword,
+    esc_html,
+)
+from yoki_plugin_sdk import background  # noqa: F401
+from yoki_plugin_sdk import list_response  # noqa: F401
+from yoki_plugin_sdk import detail as detail_response  # noqa: F401
+from yoki_plugin_sdk import error as _sdk_error
 
 
 def error(msg, details=None, retry=None):
-    out = {"type": "error", "error": msg}
-    if details:
-        out["details"] = details
+    """Extended error response with optional retry_action (Spotify-specific)."""
+    out = _sdk_error(msg, details)
     if retry:
         out["retry_action"] = retry
     return out
-
-
-def list_response(items):
-    return {"type": "list", "items": items}
-
-
-def detail_response(markdown, metadata=None, actions=None):
-    out = {"type": "detail", "markdown": markdown}
-    if metadata:
-        out["metadata"] = metadata
-    if actions:
-        out["actions"] = actions
-    return out
-
-
-# ---------- Query parsing ----------
-
-def strip_keyword(query, *keywords):
-    q = (query or "").strip()
-    low = q.lower()
-    for kw in keywords:
-        kw_low = kw.lower()
-        if low == kw_low:
-            return ""
-        if low.startswith(kw_low + " "):
-            return q[len(kw) + 1 :].strip()
-    return q
 
 
 # ---------- Paths / config / tokens ----------
