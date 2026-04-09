@@ -79,7 +79,7 @@ def main():
             subtitle_parts.append(dur)
         out.append(
             {
-                "id": t.get("id", t.get("uri", "")),
+                "id": t.get("uri", t.get("id", "")),
                 "title": t.get("name", "Unknown"),
                 "subtitle": "  ·  ".join(p for p in subtitle_parts if p),
                 "icon": "M",

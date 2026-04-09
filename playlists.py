@@ -60,7 +60,7 @@ def main():
             subtitle_parts.append("private")
         out.append(
             {
-                "id": p.get("id", ""),
+                "id": p.get("uri", p.get("id", "")),
                 "title": p.get("name", "Untitled"),
                 "subtitle": "  ·  ".join(subtitle_parts),
                 "icon": "L",
