@@ -4,7 +4,7 @@
   "keyword": "sp",
   "icon": "music",
   "description": "Control Spotify from Yoki — play, search, switch devices",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Yoki",
   "homepage": "https://yoki.run",
   "license": "MIT",
