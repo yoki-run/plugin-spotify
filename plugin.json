@@ -112,7 +112,7 @@
       "title": "Playlists",
       "mode": "list",
       "exec": "playlists.py",
-      "keywords": ["playlists", "pl", "lists"]
+      "keywords": ["playlists", "playlist", "pl", "lists"]
     },
     {
       "name": "setup",
