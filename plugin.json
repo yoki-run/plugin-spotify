@@ -32,7 +32,7 @@
       "description": "Show what's playing right now",
       "mode": "detail",
       "exec": "now_playing.js",
-      "refresh": 1000
+      "refresh": 5000
     },
     {
       "name": "play",

@@ -42,15 +42,21 @@ const SCOPES = [
 ].join(" ");
 
 function openBrowser(targetUrl) {
-  const { exec } = require("child_process");
+  const { execFile } = require("child_process");
   const platform = process.platform;
-  let cmd;
-  if (platform === "win32") cmd = "start \"\" \"" + targetUrl + "\"";
-  else if (platform === "darwin") cmd = "open \"" + targetUrl + "\"";
-  else cmd = "xdg-open \"" + targetUrl + "\"";
-  try {
-    exec(cmd);
-  } catch (_) {}
+  if (platform === "win32") {
+    execFile("cmd", ["/c", "start", "", targetUrl], (err) => {
+      if (err) console.error("Failed to open browser:", err);
+    });
+  } else if (platform === "darwin") {
+    execFile("open", [targetUrl], (err) => {
+      if (err) console.error("Failed to open browser:", err);
+    });
+  } else {
+    execFile("xdg-open", [targetUrl], (err) => {
+      if (err) console.error("Failed to open browser:", err);
+    });
+  }
 }
 
 function waitForCode(timeout) {
@@ -184,7 +190,13 @@ async function main() {
     return;
   }
 
-  const tok = JSON.parse(res.body.toString("utf-8"));
+  let tok;
+  try {
+    tok = JSON.parse(res.body.toString("utf-8"));
+  } catch (e) {
+    writeResponse(error("Token parse error", "Spotify returned invalid JSON"));
+    return;
+  }
   const tokens = {
     access_token: tok.access_token,
     refresh_token: tok.refresh_token,

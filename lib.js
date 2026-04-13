@@ -75,7 +75,7 @@ function loadTokens(ctx) {
 
 function saveTokens(ctx, tokens) {
   const p = path.join(dataDir(ctx), "tokens.json");
-  fs.writeFileSync(p, JSON.stringify(tokens, null, 2), "utf-8");
+  fs.writeFileSync(p, JSON.stringify(tokens, null, 2), { encoding: "utf-8", mode: 0o600 });
 }
 
 // ---------- HTTP ----------
@@ -181,7 +181,12 @@ async function refreshAccessToken(ctx) {
 
   if (res.status !== 200) return null;
 
-  const data = JSON.parse(res.body.toString("utf-8"));
+  let data;
+  try {
+    data = JSON.parse(res.body.toString("utf-8"));
+  } catch (_) {
+    return null;
+  }
   const merged = {
     access_token: data.access_token,
     refresh_token: data.refresh_token || tokens.refresh_token,
